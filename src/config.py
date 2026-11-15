@@ -19,3 +19,10 @@ API_MAX_ROWS = 1000
 API_MAX_RADIUS_ARCSEC = 1800.0
 IRSA_CATALOGS = {"spherex": "spherex.obscore"}
 IRSA_COORD_COLUMNS = {}
+
+# Crea le cartelle di cache all'avvio (su un server nuovo, come Render, "data/" non le contiene).
+for _d in (API_CACHE_DIR, CUTOUT_DIR):
+    try:
+        _d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
