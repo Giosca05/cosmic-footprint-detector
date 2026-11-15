@@ -1,0 +1,98 @@
+[
+  {
+    "id": "wise0855",
+    "name": "WISE 0855-0714",
+    "ra": 133.795129,
+    "dec": -7.245147,
+    "tag": "NANA BRUNA",
+    "blurb": "Una delle nane brune più fredde e vicine al Sole, con un moto proprio di circa 8″ all'anno.",
+    "ep": 2010,
+    "pmra": -8118,
+    "pmdec": 680,
+    "tags": [
+      {
+        "name": "WISE 0855−0714",
+        "kind": "nana bruna fredda",
+        "approx": true
+      }
+    ],
+    "story": "WISE 0855 è uno degli oggetti più freddi che conosciamo fuori dal Sistema Solare: una 'stella fallita' gelida (circa −20 °C) a 7 anni luce. È debolissima, quindi nelle immagini è un puntino quasi invisibile.",
+    "plx": 439.0
+  },
+  {
+    "id": "barnard",
+    "name": "Stella di Barnard",
+    "ra": 269.45208,
+    "dec": 4.69336,
+    "tag": "STELLA VELOCE",
+    "blurb": "La stella con il moto proprio più alto del cielo (circa 10″ all'anno). Tra due passaggi si sposta di pochi pixel.",
+    "ep": 2000,
+    "pmra": -798.58,
+    "pmdec": 10328.12,
+    "tags": [
+      {
+        "name": "Stella di Barnard",
+        "kind": "stella ad alto moto proprio"
+      }
+    ],
+    "story": "La stella di Barnard è una piccola stella rossa a soli 6 anni luce da noi. È la stella che si muove più veloce nel cielo: in un anno percorre circa 10 secondi d'arco, più o meno la larghezza di una moneta vista da 250 metri. Premi PING e guarda come si sposta tra i mesi.",
+    "plx": 546.98
+  },
+  {
+    "id": "epsindi",
+    "name": "Epsilon Indi B",
+    "ra": 330.84021,
+    "dec": -56.78597,
+    "tag": "COPPIA DI NANE BRUNE",
+    "blurb": "Due nane brune in orbita attorno a una stella vicina. Cerca la coppia vicino alla stella brillante.",
+    "ep": 2000,
+    "pmra": 3966.41,
+    "pmdec": -2536.19,
+    "tags": [
+      {
+        "name": "ε Indi A",
+        "kind": "stella brillante"
+      },
+      {
+        "name": "ε Indi Ba/Bb",
+        "kind": "coppia di nane brune",
+        "dE": 402,
+        "dN": 11
+      }
+    ],
+    "story": "Epsilon Indi è una stella vicina (12 anni luce) con due nane brune compagne, 'stelle mancate' troppo piccole per accendersi. Si muove in fretta nel cielo: cerca le due compagne vicino alla stella brillante.",
+    "plx": 274.84
+  },
+  {
+    "id": "rwaur",
+    "name": "RW Aurigae",
+    "ra": 76.95692,
+    "dec": 30.40144,
+    "tag": "VARIABILE",
+    "blurb": "Giovane stella irregolare: la luminosità cambia da un'immagine all'altra.",
+    "ep": 2000,
+    "tags": [
+      {
+        "name": "RW Aurigae",
+        "kind": "variabile"
+      }
+    ],
+    "story": "RW Aurigae è una giovane stella irregolare: la sua luminosità cambia da un'immagine all'altra. Qui non cerchiamo un movimento ma una variazione di luce."
+  },
+  {
+    "id": "rdra",
+    "name": "R Draconis",
+    "ra": 248.1708,
+    "dec": 66.755,
+    "tag": "VARIABILE",
+    "blurb": "Gigante rossa pulsante (tipo Mira): il suo splendore oscilla con grande ampiezza.",
+    "ep": 2000,
+    "tags": [
+      {
+        "name": "R Draconis",
+        "kind": "variabile Mira"
+      }
+    ],
+    "story": "R Draconis è una gigante rossa pulsante: si gonfia e si sgonfia in modo regolare e il suo splendore oscilla molto nel corso dei mesi."
+  }
+]

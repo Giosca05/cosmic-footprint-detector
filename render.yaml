@@ -1,0 +1,12 @@
+# Render Blueprint: sito pubblico gratuito di Cosmic Footprint Detector
+services:
+  - type: web
+    name: cosmic-footprint-detector
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-web.txt
+    startCommand: python -m src.web_server --no-prefetch
+    healthCheckPath: /explore.html
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3

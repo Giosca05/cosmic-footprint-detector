@@ -1,0 +1,8 @@
+# Dipendenze della pipeline Python (versioni minime indicative)
+numpy>=1.26
+pandas>=2.1
+astropy>=6.0
+# astroquery serve per interrogare IRSA/TAP (src/data/download.py)
+astroquery>=0.4.7
+requests>=2.31
+pytest>=8.0

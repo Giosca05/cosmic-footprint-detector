@@ -1,0 +1,4 @@
+# Dipendenze minime per pubblicare il sito (server + app nel browser)
+numpy>=1.26
+requests>=2.31
+astropy>=6.0

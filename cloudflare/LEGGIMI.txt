@@ -1,0 +1,18 @@
+WORKER CLOUDFLARE: caricamento ~10 volte piu' veloce (gratis, niente carta)
+==========================================================================
+Perche': il tuo collegamento (~30 Mbit/s) deve scaricare ~1 MB per immagine da AWS. Il Worker fa il ritaglio nel
+datacenter (rete velocissima) e ti manda solo ~55 KB per immagine.
+
+Metodo 1: dal sito (nessun programma da installare, 3 minuti)
+ 1. Vai su https://dash.cloudflare.com/sign-up e crea un account gratuito (email + password).
+ 2. Menu a sinistra: "Workers & Pages" -> "Create" -> "Create Worker" (modello "Hello World") -> "Deploy".
+ 3. Poi "Edit code": cancella tutto, incolla l'intero contenuto di cloudflare\worker.js, premi "Deploy".
+ 4. Copia l'indirizzo del Worker (tipo https://deepscan-cutter.TUONOME.workers.dev).
+ 5. Crea il file  data\worker_url.txt  con UNA riga: quell'indirizzo. Poi doppio clic su riavvia.bat.
+    All'avvio vedrai "[Worker] attivo: ...".
+Prova veloce: apri  <indirizzo>/ping  nel browser: deve scrivere "ok".
+
+Metodo 2 (da terminale, con Node): in questa cartella: npx wrangler login ; npx wrangler deploy
+
+Se il Worker non risponde il server ripiega da solo su S3 e poi IRSA: non si rompe nulla.
+Limiti del piano gratuito: 100.000 richieste al giorno (basta per ~2.700 settori da 36 immagini).
