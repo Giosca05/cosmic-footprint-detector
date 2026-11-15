@@ -329,6 +329,10 @@ class IrsaClient:
         validate_cone(ra_deg, dec_deg, 1.0, max_rows)
         adql = build_spherex_images_adql(ra_deg, dec_deg, size_deg, bandpass, max_rows)
         result = self.run_adql(adql, refresh=refresh)
+        for row in result.rows:  # cache vecchie: percorso doppio '/ibe/data/spherex/ibe/data/spherex/'
+            u = row.get("uri")
+            if isinstance(u, str) and "/ibe/data/spherex/ibe/data/spherex/" in u:
+                row["uri"] = u.replace("/ibe/data/spherex/ibe/data/spherex/", "/ibe/data/spherex/")
         result.meta.update({"kind": "spherex_images", "ra_deg": ra_deg, "dec_deg": dec_deg,
                             "size_deg": size_deg, "bandpass": bandpass})
         return result
