@@ -39,27 +39,47 @@
     return o + "</svg>";
   }
   /** opts: { contacts, sedInfo(sed), fmtRA, fmtDec, neo (riassunto o null), snapshot (dataURL), lang } */
+  const CSS = "@page{size:A4;margin:12mm 0 10mm}@page:first{margin:0 0 10mm}*{box-sizing:border-box}body{margin:0;font:13px/1.5 'Segoe UI',system-ui,-apple-system,sans-serif;color:#111827;-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#fff}" +
+    "@media screen{body{max-width:880px;margin:0 auto;box-shadow:0 0 30px rgba(0,0,0,.12)}}" +
+    ".hd{background:#0a1428;color:#fff;padding:22px 30px 18px;display:flex;gap:16px;align-items:center}.hd img{width:56px;height:56px;border-radius:50%;flex:none}" +
+    ".hd h1{font-size:21px;margin:0;letter-spacing:.03em;font-weight:700}.hd .sub{color:#9bbbe6;font-size:11.5px;margin-top:3px}" +
+    ".hd .tm{margin-left:auto;text-align:right;font-size:10px;letter-spacing:.16em;color:#3ee8ff;line-height:1.6;flex:none}" +
+    ".pg{padding:18px 30px 14px}.neo{background:#eef6ff;border-radius:8px;padding:9px 13px;font-size:12px;color:#1e3a5f;margin:0 0 6px}" +
+    "h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;margin:20px 0 8px}h2 span{color:#b45f00}" +
+    ".c{break-inside:avoid;border:1px solid #d5deea;border-radius:10px;margin:11px 0;overflow:hidden;display:flex;flex-wrap:wrap}" +
+    ".c .l{flex:1 1 250px;padding:12px 15px}.c .r{flex:1 1 300px;padding:12px 15px;background:#f5f8fc}" +
+    ".c h3{margin:0 0 2px;font-size:15px}.c h3 small{font-weight:400;color:#5b6b82;font-size:12px}" +
+    ".kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:8px 0 4px;font-size:12px}.kv b{color:#5b6b82;font-weight:500}" +
+    ".pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.pill{border-radius:999px;padding:2px 10px;font-size:11px;background:#e6eefa;color:#1e3a5f}" +
+    ".pill.cold{background:#fff0d9;color:#9a4d00;font-weight:600}.pill.star{background:#e3f3ff;color:#0a5c85}.pill.ok{background:#e3f6ea;color:#14663a}" +
+    ".muted{color:#5b6b82;font-size:11.5px}.r svg{width:100%;height:auto;display:block}" +
+    ".snap{margin:0}.snap img{width:100%;border-radius:8px;border:1px solid #0a1428;display:block}.snap figcaption{font-size:11px;color:#5b6b82;margin-top:4px}" +
+    ".src{columns:2;column-gap:20px;margin:0;padding:0;list-style:none;font-size:11.5px}.src li{break-inside:avoid;margin:0 0 6px}.src a{color:#0a5c85;text-decoration:none;font-weight:600}.src span{display:block;color:#5b6b82;font-size:10.5px;word-break:break-all}" +
+    ".keep{break-inside:avoid}h2{break-after:avoid}.note{margin-top:14px;font-size:11px;color:#5b6b82;border-top:1px solid #d5deea;padding-top:8px}" +
+    ".ft{margin-top:6px;padding:9px 30px;font-size:10px;color:#667a96;border-top:1px solid #d5deea;background:#fff;display:flex;justify-content:space-between}";
   function open(opts) {
     const t = TX(opts.lang);
     const list = opts.contacts.slice().sort(function (a, b) {
       const ia = opts.sedInfo(a.sed), ib = opts.sedInfo(b.sed);
       return (ib ? ib.idx : -9) - (ia ? ia.idx : -9);
     });
-    let h = '<!doctype html><html lang="' + esc(opts.lang) + '"><head><meta charset="utf-8"><title>' + esc(t.title) + '</title><style>body{font:14px/1.45 system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;color:#111}h1{margin:0}h2{border-bottom:1px solid #bbb;padding-bottom:.2rem;margin-top:1.6rem}.c{page-break-inside:avoid;border:1px solid #bbb;border-radius:6px;padding:.7rem 1rem;margin:.8rem 0;display:flex;gap:1rem;flex-wrap:wrap}.c>div{flex:1 1 300px}.cold{color:#b45f00;font-weight:600}.muted{color:#555;font-size:12px}img{max-width:100%;border:1px solid #bbb}@media print{a{color:#000}}</style></head><body>';
-    h += '<img src="' + esc(location.href.replace(/[^/]*$/, "") + "img/logo-96.png") + '" width=56 height=56 alt="" style="float:right;border:0">';
-    h += "<h1>" + esc(t.title) + "</h1><div class=muted>" + esc(t.sub) + " &middot; " + esc(t.gen) + " " + new Date().toLocaleString(opts.lang === "it" ? "it-IT" : "en-GB") + "</div>";
-    if (opts.neo) h += "<p><b>" + esc(t.neo) + ":</b> " + esc(opts.neo) + "</p>";
+    const base = location.href.replace(/[^/]*$/, "");
+    let h = '<!doctype html><html lang="' + esc(opts.lang) + '"><head><meta charset="utf-8"><title>' + esc(t.title) + "</title><style>" + CSS + "</style></head><body>";
+    h += '<div class="hd"><img src="' + esc(base + "img/logo-96.png") + '" alt=""><div><h1>' + esc(t.title) + '</h1><div class="sub">' + esc(t.sub) + " &middot; " + esc(t.gen) + " " +
+         new Date().toLocaleString(opts.lang === "it" ? "it-IT" : "en-GB") + '</div></div><div class="tm">TEAM COSMIC FOOTPRINT<br>NASA SPACE APPS 2026</div></div><div class="pg">';
+    if (opts.neo) h += '<p class="neo"><b>' + esc(t.neo) + ":</b> " + esc(opts.neo) + "</p>";
     if (!list.length) h += "<p>" + esc(t.none) + "</p>";
     list.forEach(function (c, i) {
-      const si = opts.sedInfo(c.sed), unit = c.drift ? t.unitYr : t.unitH;
-      h += '<div class="c"><div><b>#' + (i + 1) + " " + esc(c.kind) + "</b> (" + esc(c.name) + ")<br>" + esc(t.coords) + ": " + esc(opts.fmtRA(c.ra)) + " " + esc(opts.fmtDec(c.dec)) +
-           "<br>" + esc(t.speed) + ": " + Number(c.speed).toFixed(2) + " " + esc(unit) + "<br>" + esc(t.imgs) + ": " + c.frames + "/" + c.nFrames +
-           "<br>" + esc(t.gaia) + ": " + (c.known ? esc(c.known) : "<span class=muted>" + esc(t.nogaia) + "</span>");
-      if (si) h += '<br><span class="' + (si.cls === "cold" ? "cold" : "") + '">' + esc(t.cls[si.cls]) + "</span><br><span class=muted>" + esc(t.idx) + " = " + si.idx.toFixed(2) + "</span>";
-      h += "</div><div>" + (svgSed(c.sed) ? "<div class=muted>" + esc(t.spec) + "</div>" + svgSed(c.sed) : "<span class=muted>" + esc(t.nospec) + "</span>") + "</div></div>";
+      const si = opts.sedInfo(c.sed), unit = c.drift ? t.unitYr : t.unitH, sv = svgSed(c.sed);
+      h += '<div class="c"><div class="l"><h3>#' + (i + 1) + " " + esc(c.kind) + " <small>(" + esc(c.name) + ")</small></h3>" +
+           '<div class="kv"><b>' + esc(t.coords) + "</b><span>" + esc(opts.fmtRA(c.ra)) + " " + esc(opts.fmtDec(c.dec)) + "</span><b>" + esc(t.speed) + "</b><span>" + Number(c.speed).toFixed(2) + " " + esc(unit) +
+           "</span><b>" + esc(t.imgs) + "</b><span>" + c.frames + "/" + c.nFrames + "</span><b>" + esc(t.gaia) + "</b><span>" + (c.known ? esc(c.known) : '<span class="muted">' + esc(t.nogaia) + "</span>") + "</span></div>";
+      if (si) h += '<div class="pills"><span class="pill ' + (si.cls === "cold" ? "cold" : si.cls === "star" ? "star" : "") + '">' + esc(t.cls[si.cls]) + '</span><span class="pill">' + esc(t.idx) + " " + si.idx.toFixed(2) + "</span></div>";
+      h += '</div><div class="r">' + (sv ? '<div class="muted">' + esc(t.spec) + "</div>" + sv : '<span class="muted">' + esc(t.nospec) + "</span>") + "</div></div>";
     });
-    if (opts.snapshot) h += "<h2>" + esc(t.view) + '</h2><img alt="" src="' + opts.snapshot + '">';
-    h += "<h2>" + esc(t.src) + "</h2><ul>" + SOURCES.map(function (s) { return '<li><a href="' + s[1] + '">' + esc(s[0]) + "</a> <span class=muted>" + s[1] + "</span></li>"; }).join("") + "</ul><p class=muted>" + esc(t.note) + "</p></body></html>";
+    if (opts.snapshot) h += "<h2>" + esc(t.view) + '</h2><figure class="snap"><img alt="" src="' + opts.snapshot + '"></figure>';
+    h += '<div class="keep"><h2>' + esc(t.src) + '</h2><ul class="src">' + SOURCES.map(function (s) { return '<li><a href="' + s[1] + '">' + esc(s[0]) + "</a><span>" + s[1] + "</span></li>"; }).join("") + '</ul><p class="note">' + esc(t.note) + "</p></div></div>";
+    h += '<div class="ft"><span>Cosmic Footprint Detector &middot; Planet X and SPHEREx</span><span>cosmic-footprint-detector.onrender.com</span></div></body></html>';
     const url = URL.createObjectURL(new Blob([h], { type: "text/html" }));
     const w = window.open(url, "_blank");
     if (!w) { const a = document.createElement("a"); a.href = url; a.download = "deepscan-report.html"; document.body.appendChild(a); a.click(); a.remove(); }
