@@ -234,3 +234,4 @@ body.simple .adv, body.simple #band-bar, body.simple .readout, body.simple #stal
 #tab-gaia .card button.go { display: block; width: 100%; text-align: left; }
 #gh-after .card p { font-size: .68rem; }
 .gh-warn-text { font-size: .64rem !important; opacity: .9; }
+.tm-datelabel { display: flex; flex-direction: column; gap: .2rem; font-size: .72rem; margin: .4rem 0 .2rem; } .tm-date { color-scheme: dark; background: rgba(8,16,40,.9); color: #e8f1ff; border: 1px solid rgba(62,232,255,.5); border-radius: 6px; padding: .3rem .4rem; font: inherit; }
