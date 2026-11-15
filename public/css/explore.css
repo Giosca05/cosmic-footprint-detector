@@ -15,11 +15,11 @@ button { cursor: pointer; }
 a { color: var(--cyan); }
 kbd { border: 1px solid var(--line); border-radius: 4px; padding: 0 .3em; font-size: .85em; }
 
-#app { height: 100dvh; display: grid; grid-template-rows: var(--top) 1fr; grid-template-columns: 1fr;
+#app { height: 100dvh; display: grid; grid-template-rows: var(--top) 1fr; grid-template-columns: minmax(0, 1fr);
   grid-template-areas: "top" "stage"; }
 
 /* ----- barra superiore ----- */
-#topbar { grid-area: top; display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+#topbar { min-width: 0; overflow: hidden; grid-area: top; display: flex; align-items: center; justify-content: space-between; gap: .75rem;
   padding: 0 .75rem; border-bottom: 1px solid var(--line); background: linear-gradient(#0a1428, #060b18); z-index: 5; }
 .brand { display: flex; align-items: center; gap: .6rem; white-space: nowrap; min-width: 0; }
 .brand .logo { width: 34px; height: 34px; border-radius: 50%; flex: none; box-shadow: 0 0 12px rgba(62,232,255,.35); }
@@ -40,6 +40,10 @@ kbd { border: 1px solid var(--line); border-radius: 4px; padding: 0 .3em; font-s
 .pill:hover { color: var(--text); border-color: var(--cyan); }
 .pill.on { color: #04060d; background: var(--cyan); border-color: var(--cyan); font-weight: 700; box-shadow: 0 0 12px rgba(62,232,255,.4); }
 @keyframes pulse { to { opacity: .35; } }
+/* badge IRSA: testo lungo solo su schermi larghi, corto altrove (non deve mai allargare la pagina) */
+.irsa-badge .s { display: none; }
+@media (max-width: 1279px) { .irsa-badge .f { display: none; } .irsa-badge .s { display: inline; } }
+@media (max-width: 599px) { #b-simple span:last-child { display: none; } .irsa-badge { margin-left: 6px !important; } }
 
 /* ----- scopo ----- */
 #stage { grid-area: stage; display: grid; grid-template-rows: 1fr auto; min-height: 0; position: relative; }
