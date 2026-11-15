@@ -683,6 +683,30 @@
     ctx.textAlign = "left";
   }
 
+  /** Badge dei flag SPHEREx sopra la cella: uno per tipo di flag presente in almeno una delle sue immagini (con quante). */
+  function sectorFlagCounts(sec) {
+    const fr = sec.sorted || sec.frames || [], key = fr.length + ":" + sec.version;
+    if (sec.flagKey === key) return sec.flagCnt;
+    const cnt = {}; let known = 0;
+    fr.forEach(function (x) { if (!x.flagNames) return; known++; x.flagNames.forEach(function (n) { cnt[n] = (cnt[n] || 0) + 1; }); });
+    sec.flagKey = key; sec.flagCnt = { known: known, list: Object.keys(cnt).sort(function (p, q) { return cnt[q] - cnt[p]; }).map(function (n) { return [n, cnt[n]]; }) };
+    return sec.flagCnt;
+  }
+  function renderFlagBar(sec, f) {
+    const bar = $("flag-bar"); if (!bar) return;
+    const fc = sec && sec.status === "ready" ? sectorFlagCounts(sec) : null;
+    const sig = fc ? fc.list.map(function (p) { return p[0] + p[1]; }).join() + "|" + fc.known + "|" + (f && f.flagNames ? f.flagNames.join() : "") : "";
+    if (bar._sig === sig) return; bar._sig = sig;
+    bar.innerHTML = "";
+    if (!fc || !fc.list.length) { bar.hidden = true; return; }
+    bar.hidden = false;
+    const cur = f && f.flagNames ? f.flagNames : [];
+    fc.list.forEach(function (p) {
+      const b = document.createElement("span"); b.className = "flag-badge" + (cur.indexOf(p[0]) >= 0 ? " now" : "");
+      b.title = T("flag_tip", p[1], fc.known); b.textContent = p[0] + " " + p[1] + "/" + fc.known; bar.appendChild(b);
+    });
+  }
+
   function niceScale(arc) {                   // lunghezza "tonda" della barra di scala, in arcsec
     const opts = [5, 10, 20, 30, 60, 120, 300, 600]; let best = opts[0];
     for (const o of opts) if (o * pxPerArc() <= S.W * 0.28) best = o;
@@ -1442,6 +1466,7 @@
     const f = sec && sec.sorted.length ? sec.sorted[Math.min(S.tick % sec.sorted.length, sec.sorted.length - 1)] : null;
     $("frame-info").textContent = !sec ? "—" : sec.status === "loading" ? T("frame_scanning", sec.loaded, sec.total || "?")
       : f ? (n === 1 ? T("frame_stacked", sec.sorted.length) : ((S.tick % n) + 1) + "/" + n + " · " + new Date((f.mjd - 40587) * 86400000).toISOString().slice(0, 10)) + (f.flagNames && f.flagNames.length ? " · " + T("flag_at", f.flagNames.slice(0, 2).join(", ") + (f.flagNames.length > 2 ? "…" : "")) : "") : "—";
+    renderFlagBar(sec, f);
     $("o-info").textContent = sec && sec.status === "ready"
       ? T("info_line", sec.det || "?", sec.sorted.length, sec.groupsInfo || "—", sec.aligned || 0, (sec.shiftPx || 0).toFixed(2)) +
         (sec.rots && sec.rots.length ? T("info_tilt", sec.rots.join(" / ")) : "") + T("info_coverage", Math.round(sec.coverage * 100)) + flagSummary(sec)
