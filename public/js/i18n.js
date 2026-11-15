@@ -56,6 +56,9 @@
       led_demo: "DEMO",
       led_live: "LIVE",
       led_scanning: "SCANNING {0}",
+      mode_busy: "Updating the view…",
+      irsa_down: "IRSA is experiencing technical issues. The website may run slowly.",
+      irsa_tip: "NASA's IRSA archive is not answering right now: new zones may not load. Click to check its status.",
       guide_title: "Guide and tour (?)",
       guide_aria: "Guide",
 
@@ -354,6 +357,9 @@
       led_demo: "DEMO",
       led_live: "LIVE",
       led_scanning: "SCANSIONE {0}",
+      mode_busy: "Aggiorno la vista…",
+      irsa_down: "IRSA sta riscontrando problemi tecnici, il sito subirà rallentamenti",
+      irsa_tip: "L'archivio NASA IRSA non risponde in questo momento: le zone nuove potrebbero non caricarsi. Clicca per controllarne lo stato.",
       guide_title: "Guida e tour (?)",
       guide_aria: "Guida",
 

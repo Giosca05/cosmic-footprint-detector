@@ -22,7 +22,7 @@
   // max 0.2 gradi) cosi' il settore (quadrato allineato alla griglia) e' interamente coperto.
   function cutFor(fov) { return Math.min(0.2, fov * 1.35); }
   const BATCH = 4;                 // ritagli per richiesta a lotti (/api/cutouts)
-  const MAX_NET = 6;               // richieste contemporanee verso il server
+  const MAX_NET = 8;               // richieste contemporanee verso il server
   const MAX_SECTORS = 25;          // settori tenuti in memoria
   const FALLBACK_MISSIONS = [
     { id: "wise0855", name: "WISE 0855-0714", ra: 133.795129, dec: -7.245147, tag: "NANA BRUNA", blurb: "Nana bruna fredda e vicina." }
@@ -174,7 +174,7 @@
           noteStale(first);
           if (full && full.rows) { S.extra = pickSpread(full.rows, first.rows || [], S.count); }
           S.extraReady = true;                   // SOLO ora i settori possono aggiungere le righe extra (prima S.extra era ancora vuoto: corsa)
-          S.sectors.forEach(function (sec) { if (sectorVisible(sec)) addExtra(sec); });
+          S.sectors.forEach(function (sec) { if (isCurrent(sec)) addExtra(sec); });
         }).catch(function () { /* primo elenco fallito: si ritenta da loadSector */ });
       }).catch(function () { S.extraReady = true; S.fullDone = true; /* elenco completo fallito: restano le prime immagini */ });
     }
@@ -204,17 +204,19 @@
     S.demo = !!list.demo; updateLed();
     if (!S.refKey && list.rows && list.rows.length) S.refKey = keyOfUri(list.rows[0].uri);
     startCutouts(sec, list.rows || [], !(sec.a === 0 && sec.b === 0), false);
-    if (sectorVisible(sec)) addExtra(sec);
+    if (isCurrent(sec)) addExtra(sec);
   }
 
-  function keyOfUri(u) { return String(u || "").split("?")[0]; }
+  const DOUBLE = "/ibe/data/spherex/ibe/data/spherex/";       // vecchie liste in cache: percorso IRSA scritto due volte (dava 502)
+  function fixUri(u) { u = String(u || ""); return u.indexOf(DOUBLE) >= 0 ? u.replace(DOUBLE, "/ibe/data/spherex/") : u; }
+  function keyOfUri(u) { return fixUri(u).split("?")[0]; }
 
   function startCutouts(sec, rows, move, append) {
     if (!rows.length) { if (!append) sec.status = "empty"; return; }
     sec.total = (append ? sec.total : 0) + rows.length; if (!append) sec.loaded = 0;
     const high = isCurrent(sec);
     const list = rows.map(function (row) {
-      return move ? { uri: retarget(row.uri, sec.ra, sec.dec, sec.cut), time_bounds_lower: row.time_bounds_lower } : row;
+      return move ? { uri: retarget(fixUri(row.uri), sec.ra, sec.dec, sec.cut), time_bounds_lower: row.time_bounds_lower } : { uri: fixUri(row.uri), time_bounds_lower: row.time_bounds_lower };
     });
     for (let i = 0; i < list.length; i += BATCH) {                 // lotti da BATCH ritagli: poche richieste, tanto parallelismo sul server
       const chunk = list.slice(i, i + BATCH);
@@ -448,14 +450,78 @@
       lo = v[Math.floor(v.length * 0.02)] || 0; hi = v[Math.floor(v.length * 0.995)] || 1; if (hi <= lo) hi = lo + 1;
     }
     sec.sorted = frames; sec.diff = diff; sec.sigma = sigma; sec.coverage = cov / size;
-    sec.disp = { arrays: arrays, lo: lo, hi: hi, diverging: diverging };
-    sec.canvases = []; sec.version++; sec.status = "ready";
-    sec.blips = null;
-    if (isCurrent(sec)) syncTimeline();
+    const nd = { arrays: arrays, lo: lo, hi: hi, diverging: diverging };
+    if (S.swap && S.swap.has(sec.key) && sec.disp) { sec.pend = nd; swapCheck(); }      // cambio di modalita': si aggiorna tutto insieme
+    else { sec.disp = nd; sec.canvases = []; sec.version++; sec.status = "ready"; sec.blips = null; if (isCurrent(sec)) syncTimeline(); }
     if (wantDrift) { sec.drifters = r.drifters; trackSector(sec); if (S.pingWanted || S.blips.length) showTracks(); }
   }
 
-  function rebuildAll() { S.sectors.forEach(function (sec) { if (sec.frames.length) scheduleBuild(sec); }); }
+  /* Cambio modalita'/filtri: ogni settore va ricalcolato (uno alla volta). Per non vedere un mosaico di modalita' diverse, i nuovi
+   * risultati restano in attesa (sec.pend) e si mostrano TUTTI insieme quando l'ultimo settore e' pronto (o dopo 25 s al massimo). */
+  /* All'apertura: IRSA risponde? Se no, un badge accanto al nome porta alla pagina di stato (controllo fatto dal nostro server). */
+  function checkIrsa() {
+    fetch("/api/irsa").then(function (r) { return r.json(); }).then(function (j) {
+      const a = document.getElementById("irsa-badge"); if (!a) return;
+      if (j && j.ok === false) {
+        if (!document.getElementById("irsa-style")) {
+          const st = document.createElement("style"); st.id = "irsa-style";
+          st.textContent = ".irsa-badge{margin-left:10px;padding:4px 9px;border-radius:999px;background:rgba(255,120,60,.14);border:1px solid rgba(255,150,80,.7);"
+            + "color:#ffb27a;font:700 10px/1 system-ui,sans-serif;letter-spacing:.08em;text-decoration:none;white-space:nowrap;align-self:center}"
+            + ".irsa-badge:hover{background:rgba(255,120,60,.28)}.irsa-badge[hidden]{display:none}";
+          document.head.appendChild(st);
+        }
+        a.textContent = T("irsa_down"); a.title = T("irsa_tip"); a.hidden = false;
+      } else a.hidden = true;
+    }).catch(function () { /* controllo non riuscito: nessun badge */ });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", checkIrsa); else checkIrsa();
+
+  function busyBadge(on) {
+    let el = document.getElementById("mode-busy");
+    if (!el) {
+      if (!on) return;
+      const st = document.createElement("style");
+      st.textContent = "#mode-busy{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:10px;"
+        + "padding:8px 14px;border-radius:999px;background:rgba(6,14,32,.88);border:1px solid rgba(62,232,255,.55);color:#cfefff;"
+        + "font:600 12px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;pointer-events:none;opacity:0;transition:opacity .15s}"
+        + "#mode-busy.on{opacity:1}#mode-busy i{width:14px;height:14px;border-radius:50%;border:2px solid rgba(62,232,255,.3);border-top-color:#3ee8ff;animation:mbspin .8s linear infinite}"
+        + "@keyframes mbspin{to{transform:rotate(360deg)}}";
+      document.head.appendChild(st);
+      el = document.createElement("div"); el.id = "mode-busy"; el.innerHTML = "<i></i><span></span>";
+      ($("scope-wrap") || document.body).appendChild(el);
+    }
+    el.querySelector("span").textContent = T("mode_busy");
+    if (on) { S.badgeAt = performance.now(); clearTimeout(S.badgeT); el.classList.add("on"); return; }
+    const left = Math.max(0, 600 - (performance.now() - (S.badgeAt || 0)));         // resta visibile almeno 0,6 s
+    clearTimeout(S.badgeT); S.badgeT = setTimeout(function () { el.classList.remove("on"); }, left);
+  }
+  function swapCommit() {
+    if (!S.swap) return;
+    busyBadge(false);
+    clearTimeout(S.swapT); S.swapT = null;
+    const keys = Array.from(S.swap); S.swap = null;
+    keys.forEach(function (k) {
+      const sec = S.sectors.get(k);
+      if (sec && sec.pend) { sec.disp = sec.pend; sec.pend = null; sec.canvases = []; sec.version++; sec.status = "ready"; sec.blips = null; }
+    });
+    const cs = S.sectors.get(keyOf(camSector().a, camSector().b));
+    if (cs && cs.disp) syncTimeline();
+  }
+  function swapCheck() {
+    if (!S.swap) return;
+    for (const k of S.swap) { const sec = S.sectors.get(k); if (sec && sec.epoch === S.epoch && !sec.pend && sec.frames.length) return; }
+    swapCommit();
+  }
+  function rebuildAll() {
+    const c = camSector(), list = [];
+    S.sectors.forEach(function (sec) { if (sec.frames.length) list.push(sec); });
+    list.sort(function (x, y) { return Math.hypot(x.a - c.a, x.b - c.b) - Math.hypot(y.a - c.a, y.b - c.b); });   // prima quelli sotto la camera
+    if (S.swap) swapCommit();
+    const ready = list.filter(function (sec) { return sec.disp; });
+    S.swap = ready.length >= 1 ? new Set(ready.map(function (sec) { return sec.key; })) : null;
+    if (S.swap) { busyBadge(true); S.swapT = setTimeout(swapCommit, 25000); }
+    list.forEach(function (sec) { scheduleBuild(sec); });
+  }
 
   /* Tavolozze: immagine = ghiaccio/brace, differenza = ciano (meno) / ambra-bianco (piu') */
   const LUT_IMG = (function () {
@@ -517,7 +583,10 @@
       if (!te && !tn) { S.cam.ve *= Math.pow(0.02, dt); S.cam.vn *= Math.pow(0.02, dt); }   // inerzia dopo il lancio
       S.cam.e += S.cam.ve * dt; S.cam.n += S.cam.vn * dt;
     }
-    S.sectors.forEach(function (sc) { if (!sc.extraAdded && sc.total && sectorVisible(sc)) addExtra(sc); });   // in vista = completo
+    // Le immagini extra (fino a 60 per settore) si scaricano subito solo per il settore sotto la camera; per gli altri in vista
+    // solo quando la rete e' quasi libera: cosi' le zone nuove compaiono prima (le prime 12 immagini bastano per vederle).
+    const netFree = S.inflight + S.queue.length < 3;
+    S.sectors.forEach(function (sc) { if (!sc.extraAdded && sc.total && sectorVisible(sc) && (isCurrent(sc) || netFree)) addExtra(sc); });
     // carica il settore sotto la camera e prefetch dei vicini
     const c = camSector(), cur = ensureSector(c.a, c.b, true);
     if (cur.status === "ready") {
@@ -621,11 +690,7 @@
   }
 
   function drawHud(t) {
-    const W = S.W, H = S.H, m = 14, L = 22;
-    ctx.strokeStyle = "rgba(62,232,255,.85)"; ctx.lineWidth = 2;
-    [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]].forEach(function (c) {
-      ctx.beginPath(); ctx.moveTo(c[0], c[1] + c[3] * L); ctx.lineTo(c[0], c[1]); ctx.lineTo(c[0] + c[2] * L, c[1]); ctx.stroke();
-    });
+    const W = S.W, H = S.H, m = 14;                               // niente cornici decorative: solo mirino, scala e bussola (informativi)
     // mirino centrale
     const cx = W / 2, cy = H / 2, r = 20;
     ctx.strokeStyle = "rgba(255,179,71,.9)"; ctx.lineWidth = 1.5;
