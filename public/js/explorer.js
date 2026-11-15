@@ -816,7 +816,17 @@
     const m = S.mission; if (!m) return "";
     const a = positionAt(m, {}, 2016.0), b = positionAt(m, {}, y), o = offsetFromSky({ ra: a.ra, dec: a.dec }, b.ra, b.dec);
     const dist = Math.hypot(o.e, o.n), eps = tmEpochs().slice().sort(function (p, q) { return Math.abs(p.y - y) - Math.abs(q.y - y); })[0];
-    return T("tm_info", y.toFixed(1), dist.toFixed(0), (dist / (S.fovDeg * 3600 / 96)).toFixed(0), T(eps.k), eps.y.toFixed(1), Math.abs(eps.y - y).toFixed(1));
+    return T("tm_info", y.toFixed(1), dist.toFixed(0), (dist / (S.fovDeg * 3600 / 96)).toFixed(0), T(eps.k), eps.y.toFixed(1), Math.abs(eps.y - y).toFixed(1)) + " " + T("tm_pos", b.ra.toFixed(5), b.dec.toFixed(5));
+  }
+  /* data <-> anno decimale (per il selettore di data del browser) */
+  function dateToYear(str) {
+    const p = String(str).split("-").map(Number); if (p.length !== 3 || !p[0]) return null;
+    const t0 = Date.UTC(p[0], 0, 1), t1 = Date.UTC(p[0] + 1, 0, 1), t = Date.UTC(p[0], p[1] - 1, p[2]);
+    return p[0] + (t - t0) / (t1 - t0);
+  }
+  function yearToDate(y) {
+    const yr = Math.floor(y), t0 = Date.UTC(yr, 0, 1), t1 = Date.UTC(yr + 1, 0, 1), d = new Date(t0 + (y - yr) * (t1 - t0));
+    return d.toISOString().slice(0, 10);
   }
   function tmRender() {
     const box = $("tm-box"), m = S.mission; if (!box) return;
@@ -826,12 +836,19 @@
     const h = document.createElement("b"); h.textContent = T("tm_title"); box.appendChild(h);
     const info = document.createElement("p"); info.className = "note"; info.id = "tm-info";
     const rng = document.createElement("input"); rng.type = "range"; rng.min = "2016"; rng.max = String(Math.ceil(S.tagYear * 10) / 10); rng.step = "0.1"; rng.value = String(S.tm == null ? S.tagYear : S.tm);
-    rng.addEventListener("input", function () { S.tm = parseFloat(rng.value); info.textContent = tmInfo(S.tm); });
+    const dt = document.createElement("input"); dt.type = "date"; dt.min = "1990-01-01"; dt.max = "2100-12-31"; dt.className = "tm-date"; dt.title = T("tm_date");
+    dt.value = yearToDate(S.tm == null ? S.tagYear : S.tm);
+    rng.addEventListener("input", function () { S.tm = parseFloat(rng.value); dt.value = yearToDate(S.tm); info.textContent = tmInfo(S.tm); });
+    dt.addEventListener("change", function () {
+      const y = dateToYear(dt.value); if (y == null) return;
+      S.tm = y; rng.value = String(Math.min(Math.max(y, +rng.min), +rng.max)); info.textContent = tmInfo(y);
+    });
     box.appendChild(rng);
+    const dl = document.createElement("label"); dl.className = "tm-datelabel"; dl.appendChild(document.createTextNode(T("tm_date") + " ")); dl.appendChild(dt); box.appendChild(dl);
     const row = document.createElement("div"); row.className = "tm-snap";
     tmEpochs().forEach(function (e) {
       const b = document.createElement("button"); b.type = "button"; b.className = "ghost"; b.textContent = T(e.k) + " " + e.y.toFixed(1);
-      b.addEventListener("click", function () { S.tm = e.y; rng.value = String(e.y); info.textContent = tmInfo(e.y); }); row.appendChild(b);
+      b.addEventListener("click", function () { S.tm = e.y; rng.value = String(e.y); dt.value = yearToDate(e.y); info.textContent = tmInfo(e.y); }); row.appendChild(b);
     });
     box.appendChild(row);
     info.textContent = S.tm == null ? T("tm_hint") : tmInfo(S.tm); box.appendChild(info);
