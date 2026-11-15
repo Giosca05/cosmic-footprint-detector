@@ -26,3 +26,22 @@ for _d in (API_CACHE_DIR, CUTOUT_DIR):
         _d.mkdir(parents=True, exist_ok=True)
     except OSError:
         pass
+
+# Pacchetti di cache: se in data/ ci sono file cache_pack_*.zip (creati da raccogli_cache.py) li scompatta all'avvio,
+# senza sovrascrivere nulla. Serve per consegnare molta cache dentro GitHub come pochi file zip invece di migliaia di file.
+def _unpack_cache_packs():
+    import zipfile
+    base = DATA_DIR.resolve()
+    for z in sorted(DATA_DIR.glob("cache_pack_*.zip")):
+        try:
+            with zipfile.ZipFile(z) as zf:
+                for n in zf.namelist():
+                    t = (DATA_DIR / n).resolve()
+                    if base not in t.parents or n.endswith("/") or t.exists():
+                        continue
+                    t.parent.mkdir(parents=True, exist_ok=True)
+                    with zf.open(n) as src, open(t, "wb") as dst:
+                        dst.write(src.read())
+        except (OSError, zipfile.BadZipFile):
+            pass
+_unpack_cache_packs()
