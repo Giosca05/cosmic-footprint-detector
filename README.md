@@ -67,7 +67,6 @@ node tests/js/check_drift.js
 ```
 
 ## Honest limits
-- Candidates are never "discoveries": each one needs follow-up. The report says so.
 - Very faint or very red objects (e.g. WISE 0855) are close to SPHEREx's noise floor.
 - NEOSSat windows are small (~0.2 deg) and have no WCS; the plate solution is estimated from Gaia stars.
 - Stars brighter than G~7 saturate in SPHEREx.
@@ -76,7 +75,3 @@ node tests/js/check_drift.js
 - **Pixel flags**: the SPHEREx `FLAGS` extension is read next to every image; frames with flagged pixels at the target (hot, ghost, streak, bloom...) are marked in the frame info.
 - **AllWISE layer** (IRSA): sources with proper motion are drawn as green squares with arrows, next to the Gaia DR3 layer.
 
-## Put it online (free)
-1. Upload this folder to a public GitHub repository.
-2. On render.com: New > Blueprint > pick the repository. `render.yaml` creates the web service (`python -m src.web_server --no-prefetch`).
-3. Free instances sleep after 15 minutes without visits; the first load takes about a minute.
