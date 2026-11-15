@@ -470,7 +470,8 @@
             + ".irsa-badge:hover{background:rgba(255,120,60,.28)}.irsa-badge[hidden]{display:none}";
           document.head.appendChild(st);
         }
-        a.textContent = T("irsa_down"); a.title = T("irsa_tip"); a.hidden = false;
+        a.textContent = ""; a.title = T("irsa_tip"); a.hidden = false;
+        [["f", T("irsa_down")], ["s", T("irsa_short")]].forEach(function (p) { const s = document.createElement("span"); s.className = p[0]; s.textContent = p[1]; a.appendChild(s); });   // testo lungo su schermi larghi, corto sugli altri
       } else a.hidden = true;
     }).catch(function () { /* controllo non riuscito: nessun badge */ });
   }
