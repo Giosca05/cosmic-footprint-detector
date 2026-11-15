@@ -617,6 +617,7 @@ def catalog_cone(ra: float, dec: float) -> list[dict]:
     return rows
 
 
+_IRSA_STATE = {"t": 0.0, "ok": True}
 WISE_EPOCH = 2010.56                       # epoca di riferimento di AllWISE (MJD 55400)
 
 
@@ -732,6 +733,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._api_gaia(q)
             elif url.path == "/api/wise":
                 self._api_wise(q)
+            elif url.path == "/api/irsa":
+                self._api_irsa()
             elif url.path == "/api/gaia_search":
                 self._api_gaia_search(q)
             elif url.path == "/api/neossat":
@@ -1076,6 +1079,26 @@ class Handler(BaseHTTPRequestHandler):
                 seen.add(x["id"])
                 out.append({"id": x["id"], "ra": x["ra"], "dec": x["dec"], "pmra": x["pmra"], "pmdec": x["pmdec"], "mag": x.get("mag"), "plx": x.get("plx")})
         self._json(200, {"stars": out, "epoch": GAIA_EPOCH})
+
+    def _api_irsa(self) -> None:
+        """IRSA risponde davvero? Controlla /TAP/availability E una query minima (a volte dichiara 'available' ma risponde 502). Cache 2 minuti."""
+        st = _IRSA_STATE
+        if DEMO:
+            self._json(200, {"ok": True, "demo": True})
+            return
+        if time.time() - st["t"] > 120:
+            ok = False
+            try:
+                r = CLIENT.session.get("https://irsa.ipac.caltech.edu/TAP/availability", timeout=6)
+                ok = r.status_code == 200 and "<available>true</available>" in r.text.replace(" ", "")
+                if ok:
+                    r2 = CLIENT.session.post(config.IRSA_TAP_SYNC_URL, data={"REQUEST": "doQuery", "LANG": "ADQL", "FORMAT": "csv",
+                                                                              "QUERY": "SELECT TOP 1 ra FROM spherex.plane"}, timeout=(6, 15))
+                    ok = r2.status_code == 200
+            except Exception:                                  # noqa: BLE001
+                ok = False
+            st.update(t=time.time(), ok=ok)
+        self._json(200, {"ok": st["ok"]})
 
     def _api_wise(self, q: dict) -> None:
         """Sorgenti AllWISE con moto proprio attorno a un punto (livello 'catalogo WISE' sull'immagine)."""
